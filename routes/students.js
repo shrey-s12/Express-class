@@ -1,23 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../connection');
-const collection = db.collection('students');
-const mongodb = require('mongodb');
+// const db = require('../connection');
+// const collection = db.collection('students');
+// const mongodb = require('mongodb');
+
+const collection = require('../models/studentsModel');
 
 router.get("/", async (req, res) => {
     try {
-        const students = await collection.find().toArray();
+        const students = await collection.find();
         res.json(students);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-router.get("/:id", getObjectId, async (req, res) => {
+router.get("/:id", async (req, res) => {
     try {
-        const students = await collection.findOne({
-            _id: req.o_id,
-        })
+        const students = await collection.findById(req.params.id);
         res.json(students);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -27,56 +27,36 @@ router.get("/:id", getObjectId, async (req, res) => {
 router.post("/", async (req, res) => {
     const { name, age, subjects, gpa } = req.body;
     try {
-        const student = await collection.insertOne({
-            name: name,
-            age: age,
-            subjects: subjects,
-            gpa: gpa,
-        });
-        res.json(student);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
+        // const newStudents = new collection(req.body);
+        // const student = await newStudents.save();
+        // res.json(student);
 
-router.patch("/:id", getObjectId, async (req, res) => {
-    const { name, age, subjects, gpa } = req.body;
-    try {
-        const student = await collection.updateOne({
-            _id: req.o_id,
-        }, {
-            $set: {
-                name: name,
-                age: age,
-                subjects: subjects,
-                gpa: gpa,
-            }
-        });
-        res.json(student);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.delete("/:id", getObjectId, async (req, res) => {
-    try {
-        const students = await collection.deleteOne({
-            _id: req.o_id,
-        });
+        // 2nd way to create a new student
+        const students = await collection.create({ name, age, subjects, gpa });
         res.json(students);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-// Middleware to convert string id to mongodb object id
-function getObjectId(req, res, next) {
-    const { id } = req.params;
-    // Convert string id to mongodb object id
-    const o_id = new mongodb.ObjectId(id);
-    req.o_id = o_id;
-    next();
-}
+router.patch("/:id", async (req, res) => {
+    try {
+        const student = await collection.findById(req.params.id);
+        Object.assign(student, req.body);
+        const updatedStudent = await collection.save();
+        res.json(updatedStudent);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
+router.delete("/:id", async (req, res) => {
+    try {
+        const students = await collection.findByIdAndDelete(req.params.id);
+        res.json(students);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
 module.exports = router;

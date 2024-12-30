@@ -97,19 +97,15 @@ dorenv.config();
 
 const express = require('express');
 const studentsRoues = require('./routes/students');
-const db = require('./connection');
+require('./mongoose_conn');
 
 const PORT = process.env.PORT;
-
-const students = db.collection('students');
 
 const app = express();
 app.use(express.json());
 
-app.get("/", async (req, res) => {
-    const cursor = students.find();
-    const results = await cursor.toArray();
-    res.json(results);
+app.get("/", (req, res) => {
+    res.send("Hello World");
 });
 
 app.use("/students", studentsRoues);
