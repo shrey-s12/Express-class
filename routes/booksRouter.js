@@ -8,7 +8,7 @@ router.post("/", async (req, res) => {
     try {
         const newBook = new bookCollection({ title, author, publishedDate, genre, price });
         const book = await newBook.save();
-        res.json(book);
+        res.json({ message: "Book created successfully", book });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
@@ -26,6 +26,9 @@ router.get("/", async (req, res) => {
 router.put("/:title", async (req, res) => {
     try {
         const book = await bookCollection.findOne({ title: req.params.title });
+        if (!book) {
+            return res.status(404).json({ message: "Book not found" });
+        }
         Object.assign(book, req.body);
         const updatedBook = await book.save();
         res.json(updatedBook);
@@ -37,7 +40,10 @@ router.put("/:title", async (req, res) => {
 router.delete("/:title", async (req, res) => {
     try {
         const book = await bookCollection.deleteOne({ title: req.params.title });
-        res.json(book);
+        if (book.deletedCount === 0) {
+            return res.status(404).json({ message: "Book not found" });
+        }
+        res.json({ message: "Book deleted successfully" });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
