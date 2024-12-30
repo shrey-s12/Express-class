@@ -92,18 +92,24 @@
 
 // ---------------------------------------------Sir---------------------------------------------
 
+const dorenv = require('dotenv');
+dorenv.config();
+
 const express = require('express');
 const studentsRoues = require('./routes/students');
+const db = require('./connection');
 
-const PORT = 5050;
+const PORT = process.env.PORT;
+
+const students = db.collection('students');
+
 const app = express();
 app.use(express.json());
 
-app.get("/", (req, res) => {
-    console.log(req.method);
-    console.log(req.url);
-    console.log(req.query);
-    res.json({ message: "Hey Everone!" });
+app.get("/", async (req, res) => {
+    const cursor = students.find();
+    const results = await cursor.toArray();
+    res.json(results);
 });
 
 app.use("/students", studentsRoues);

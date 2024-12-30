@@ -1,84 +1,82 @@
 const express = require('express');
-const fs = require('fs');
 const router = express.Router();
+const db = require('../connection');
+const collection = db.collection('students');
+const mongodb = require('mongodb');
 
-router.use(readData);
-
-router.get("/", (req, res) => {
-    console.log(req.method);
-    console.log(req.url);
-    console.log(req.query);
-    res.json(req.students);
-});
-
-router.get("/:id", getStudentById, (req, res) => {
-    console.log("Fetching:", req.params.id);
-    res.json(req.student);
-});
-
-router.post("/", writeData, (req, res) => {
-    console.log(req.body);
-    let students = req.students;
-    const { id, name } = req.body;
-    const newStudent = { id, name };
-    students.push(newStudent);
-
-    res.saveStudents(students, res => res.json({ message: "Added successfully" }))
-});
-
-router.patch("/:id", writeData, (req, res) => {
-    console.log("Editing:", req.params.id);
-    console.log(req.body);
-    let students = req.students;
-    students = students.map(student => {
-        return student.id == req.params.id ? { ...student, ...req.body, id: req.params.id } : student;
-    });
-    res.saveStudents(students, res => res.json({ message: "Updated successfully" }));
-});
-
-router.delete("/:id", writeData, (req, res) => {
-    console.log("Deleting:", req.params.id);
-    let students = req.students;
-    students = students.filter(student => student.id != req.params.id);
-    res.saveStudents(students, res => res.json({ message: "Deleted successfully" }));
-});
-
-// Middleware to read data from file
-function readData(req, res, next) {
-    fs.readFile('./students.json', function (err, data) {
-        if (err) {
-            console.error(err);
-            res.status(500).json({ message: "unable to open a file on server" });
-            return;
-        }
-        req.students = JSON.parse(data);
-        next();
-    });
-}
-
-// Middleware to get student by id
-function getStudentById(req, res, next) {
-    const students = req.students;
-    req.student = students.find(student => student.id == req.params.id);
-    if (!req.student) {
-        res.status(404).json({ message: "Student not found" });
-        return;
+router.get("/", async (req, res) => {
+    try {
+        const students = await collection.find().toArray();
+        res.json(students);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
+});
+
+router.get("/:id", getObjectId, async (req, res) => {
+    try {
+        const students = await collection.findOne({
+            _id: req.o_id,
+        })
+        res.json(students);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.post("/", async (req, res) => {
+    const { name, age, subjects, gpa } = req.body;
+    try {
+        const student = await collection.insertOne({
+            name: name,
+            age: age,
+            subjects: subjects,
+            gpa: gpa,
+        });
+        res.json(student);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.patch("/:id", getObjectId, async (req, res) => {
+    const { name, age, subjects, gpa } = req.body;
+    try {
+        const student = await collection.updateOne({
+            _id: req.o_id,
+        }, {
+            $set: {
+                name: name,
+                age: age,
+                subjects: subjects,
+                gpa: gpa,
+            }
+        });
+        res.json(student);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.delete("/:id", getObjectId, async (req, res) => {
+    try {
+        const students = await collection.deleteOne({
+            _id: req.o_id,
+        });
+        res.json(students);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Middleware to convert string id to mongodb object id
+function getObjectId(req, res, next) {
+    const { id } = req.params;
+    // Convert string id to mongodb object id
+    const o_id = new mongodb.ObjectId(id);
+    req.o_id = o_id;
     next();
 }
 
-function writeData(req, res, next) {
-    res.saveStudents = (students, resCallback) => {
-        fs.writeFile('./students.json', JSON.stringify(students), function (err) {
-            if (err) {
-                console.error(err);
-                res.status(500).json({ message: "unable to open a file while writing on server" });
-                return;
-            }
-            resCallback(res);
-        })
-    };
-    next();
-}
 
 module.exports = router;
