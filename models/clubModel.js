@@ -4,11 +4,16 @@ const Schema = mongoose.Schema;
 const clubSchema = new Schema({
     name: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     description: {
         type: String,
         required: true
+    },
+    students: {
+        type: [Schema.Types.ObjectId],
+        ref: 'Student'
     }
 });
 

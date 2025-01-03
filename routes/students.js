@@ -6,7 +6,7 @@ const Club = require('../models/clubModel');
 
 router.get("/", async (req, res) => {
     try {
-        const students = await Student.find().populate("profile");
+        const students = await Student.find().populate("profile clubs");
         res.json(students);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -15,8 +15,31 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
     try {
-        const students = await Student.findById(req.params.id).populate("profile");
-        res.json(students);
+        const student = await Student.findById(req.params.id).populate("profile");
+        const currentGPA = student.calculateGPA;
+        console.log(currentGPA, "currentGPA");
+        res.json({ student, currentGPA });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.post("/:id/club", async (req, res) => {
+    try {
+        const club = await Club.findById(req.body._id);
+        const student = await Student.findById(req.params.id);
+
+        if (club.students.includes(student.id)) {
+            return res.status(400).json({ message: "Student already in club" });
+        }
+
+        club.students.push(student.id);
+        await club.save();
+
+        student.clubs.push({ _id: club.id, name: club.name });
+        const ack = await student.save();
+
+        res.json(ack);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
