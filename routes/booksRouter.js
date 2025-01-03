@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-
-const bookCollection = require('../models/bookModel');
+const Book = require('../models/bookModel');
+const User = require('../models/userModel');
+const BorrowedBooks = require('../models/borrowedBooksModel');
 
 router.post("/", async (req, res) => {
     const { title, author, publishedDate, genre, price } = req.body;
     try {
-        const newBook = new bookCollection({ title, author, publishedDate, genre, price });
+        const newBook = new Book({ title, author, publishedDate, genre, price });
         const book = await newBook.save();
         res.json({ message: "Book created successfully", book });
     } catch (e) {
@@ -14,9 +15,46 @@ router.post("/", async (req, res) => {
     }
 });
 
+router.get("/users", async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+})
+
+router.post("/users", async (req, res) => {
+    const { username } = req.body;
+    try {
+        const newUser = new User({ username });
+        const user = await newUser.save();
+        res.json({ message: "User created successfully", user });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+router.post("/:id/borrow", async (req, res) => {
+    const { username } = req.body;
+    try {
+        const user = await User.findOne({ username });
+        const book = await Book.findById(req.params.id);
+        console.log(book)
+        console.log(book._id)
+        const borrowedBook = await BorrowedBooks({ bookId: book._id });
+        console.log(borrowedBook)
+        user.borrowedBooks.push(borrowedBook);
+        const result = await user.save();
+        res.json(result);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 router.get("/", async (req, res) => {
     try {
-        const books = await bookCollection.find();
+        const books = await Book.find();
         res.json(books);
     } catch (e) {
         res.status(500).json({ message: e.message });
@@ -25,7 +63,7 @@ router.get("/", async (req, res) => {
 
 router.put("/:title", async (req, res) => {
     try {
-        const book = await bookCollection.findOne({ title: req.params.title });
+        const book = await Book.findOne({ title: req.params.title });
         if (!book) {
             return res.status(404).json({ message: "Book not found" });
         }
@@ -39,7 +77,7 @@ router.put("/:title", async (req, res) => {
 
 router.delete("/:title", async (req, res) => {
     try {
-        const book = await bookCollection.deleteOne({ title: req.params.title });
+        const book = await Book.deleteOne({ title: req.params.title });
         if (book.deletedCount === 0) {
             return res.status(404).json({ message: "Book not found" });
         }
@@ -51,7 +89,7 @@ router.delete("/:title", async (req, res) => {
 
 router.get("/genre/:genre", async (req, res) => {
     try {
-        const books = await bookCollection.find({ genre: req.params.genre });
+        const books = await Book.find({ genre: req.params.genre });
         res.json(books);
     } catch (e) {
         res.status(500).json({ message: e.message });
