@@ -96,8 +96,8 @@ const dorenv = require('dotenv');
 dorenv.config();
 
 const express = require('express');
-const studentsRoues = require('./routes/students');
-const clubRoutes = require('./routes/clubs');
+const UserRouter = require('./routes/user');
+const PostRouter = require('./routes/post');
 require('./mongoose_conn');
 
 const PORT = process.env.PORT;
@@ -109,8 +109,8 @@ app.get("/", (req, res) => {
     res.send("Hello World");
 });
 
-app.use("/students", studentsRoues);
-app.use("/clubs", clubRoutes);
+app.use("/user", UserRouter);
+app.use("/post", PostRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
