@@ -20,7 +20,11 @@ const bookSchema = new Schema({
     price: {
         type: Number,
         min: 0
-    }
+    },
+    assignedTo: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }]
 })
 
 const Book = mongoose.model('Book', bookSchema);
