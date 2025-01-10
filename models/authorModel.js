@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const authorSchema = new Schema({
+const AuthorSchema = new Schema({
     authorName: {
         type: String,
         required: true,
@@ -14,12 +14,13 @@ const authorSchema = new Schema({
         type: String,
         required: true,
     },
-    books: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Book'
-    }]
+    books: {
+        type: [Schema.Types.ObjectId],
+        ref: 'Book',
+        default: [],
+    }
 });
 
-const Author = mongoose.model('Author', authorSchema);
+const Author = mongoose.model('Author', AuthorSchema);
 
 module.exports = Author;

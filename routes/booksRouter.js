@@ -1,52 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const Author = require('../models/authorModel');
 const Book = require('../models/bookModel');
 const User = require('../models/userModel');
 const BorrowedBooks = require('../models/borrowedBooksModel');
 
 router.post("/", async (req, res) => {
-    const { title, author, publishedDate, genre, price } = req.body;
     try {
-        const newBook = new Book({ title, author, publishedDate, genre, price });
-        const book = await newBook.save();
-        res.json({ message: "Book created successfully", book });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-router.get("/users", async (req, res) => {
-    try {
-        const users = await User.find();
-        res.json(users);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-})
-
-router.post("/users", async (req, res) => {
-    const { username } = req.body;
-    try {
-        const newUser = new User({ username });
-        const user = await newUser.save();
-        res.json({ message: "User created successfully", user });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-router.post("/:id/borrow", async (req, res) => {
-    const { username } = req.body;
-    try {
-        const user = await User.findOne({ username });
-        const book = await Book.findById(req.params.id);
-        console.log(book)
-        console.log(book._id)
-        const borrowedBook = await BorrowedBooks({ bookId: book._id });
-        console.log(borrowedBook)
-        user.borrowedBooks.push(borrowedBook);
-        const result = await user.save();
-        res.json(result);
+        const newBook = await Book.insertMany(req.body);
+        res.json({ message: "Book created successfully", newBook });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
@@ -54,8 +16,21 @@ router.post("/:id/borrow", async (req, res) => {
 
 router.get("/", async (req, res) => {
     try {
-        const books = await Book.find();
+        const books = await Book.find().populate('assignedTo', "username userEmail -_id");
         res.json(books);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+router.get("/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const book = await Book.findById(id);
+        if (!book) {
+            return res.status(404).json({ message: "Book not found" });
+        }
+        res.json(book);
     } catch (e) {
         res.status(500).json({ message: e.message });
     }

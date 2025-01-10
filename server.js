@@ -4,6 +4,9 @@ dorenv.config();
 const express = require('express');
 require('./mongoose_connection');
 const booksRouter = require('./routes/booksRouter');
+const userRouter = require('./routes/userRouter');
+const authorRouter = require('./routes/authorRouter');
+const borrowedBookRouter = require('./routes/borrowedBookRouter');
 
 const PORT = process.env.PORT;
 
@@ -15,6 +18,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/books", booksRouter);
+app.use("/users", userRouter);
+app.use("/authors", authorRouter);
+app.use("/borrowedBooks", borrowedBookRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
