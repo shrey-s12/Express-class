@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Book = require('../models/bookModel');
-const { authenticateToken, isAdmin } = require('../middleware/authMiddleware');
+const { isAdmin } = require('../middleware/authMiddleware');
 
-router.post("/", authenticateToken, isAdmin, async (req, res) => {
+router.post("/", isAdmin, async (req, res) => {
     try {
         const newBook = await Book.insertMany(req.body);
         res.json({ message: "Book created successfully", newBook });
@@ -12,7 +12,7 @@ router.post("/", authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-router.get("/", authenticateToken, async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const books = await Book.find().populate('assignedTo', "username userEmail -_id");
         res.json(books);

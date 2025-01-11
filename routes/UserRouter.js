@@ -4,10 +4,9 @@ const bcrypt = require('bcrypt');
 const Book = require('../models/bookModel');
 const User = require('../models/userModel');
 const BorrowedBooks = require('../models/borrowedBooksModel');
-const { authenticateToken } = require('../middleware/authMiddleware');
 const { isAdmin } = require('../middleware/authMiddleware');
 
-router.get("/", authenticateToken, async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const users = await User.find().populate('borrowedBooks', "title authorName publishedDate genre price -_id");
         res.json(users);
@@ -16,7 +15,7 @@ router.get("/", authenticateToken, async (req, res) => {
     }
 });
 
-router.post('/', authenticateToken, isAdmin, async (req, res) => {
+router.post('/', isAdmin, async (req, res) => {
     const { username, userEmail, password, role } = req.body;
     try {
         const salt = await bcrypt.genSalt();
@@ -29,7 +28,7 @@ router.post('/', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-router.put("/:id/borrow", authenticateToken, async (req, res) => {
+router.put("/:id/borrow", async (req, res) => {
     const userId = req.params.id;
     const { bookId } = req.body;
     try {
@@ -66,7 +65,7 @@ router.put("/:id/borrow", authenticateToken, async (req, res) => {
     }
 });
 
-router.put("/:id/return", authenticateToken, async (req, res) => {
+router.put("/:id/return", async (req, res) => {
     const userId = req.params.id;
     const { bookId } = req.body;
     try {

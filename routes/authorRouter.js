@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const Author = require('../models/authorModel');
+const { paginate } = require('../middleware/paginationMiddleware');
 
-router.get("/", async (req, res) => {
+router.get("/", filterUsers, paginate, async (req, res) => {
     try {
         const authors = await Author.find().populate('books', "title publishedDate genre price -_id");
         res.json(authors);
@@ -11,6 +12,11 @@ router.get("/", async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
+function filterUsers(req, res, next) {
+    req.paginationResource = Author;
+    next();
+}
 
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
