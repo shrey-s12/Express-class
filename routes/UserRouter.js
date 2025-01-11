@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const SECRET = process.env.ACCESS_TOKEN_SECRET;
 const Book = require('../models/bookModel');
 const User = require('../models/userModel');
 const BorrowedBooks = require('../models/borrowedBooksModel');
+const { authenticateToken } = require('../middleware/authMiddleware');
+const { isAdmin } = require('../middleware/authMiddleware');
 
-router.get("/", async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
     try {
         const users = await User.find().populate('borrowedBooks', "title authorName publishedDate genre price -_id");
         res.json(users);
@@ -16,12 +16,12 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.post('/', async (req, res) => {
-    const { username, userEmail, password } = req.body;
+router.post('/', authenticateToken, isAdmin, async (req, res) => {
+    const { username, userEmail, password, role } = req.body;
     try {
         const salt = await bcrypt.genSalt();
         const hasPassword = await bcrypt.hash(password, salt);
-        const newUser = new User({ username, userEmail, password: hasPassword });
+        const newUser = new User({ username, userEmail, password: hasPassword, role });
         const user = await newUser.save();
         res.status(201).json(user);
     } catch (err) {
@@ -119,18 +119,5 @@ router.delete("/:id", async (req, res) => {
         res.json({ message: err.message });
     }
 });
-
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) {
-        return res.status(401).json({ message: 'You need To login!' });
-    }
-    jwt.verify(token, SECRET, (err, userInfo) => {
-        if (err) return res.status(400).json({ message: "Forbidden", error: err });
-        req.user = userInfo;
-        next();
-    });
-}
 
 module.exports = router;

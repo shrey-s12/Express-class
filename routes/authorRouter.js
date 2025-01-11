@@ -2,9 +2,6 @@ const express = require('express');
 const router = express.Router();
 
 const Author = require('../models/authorModel');
-const Book = require('../models/bookModel');
-const User = require('../models/userModel');
-const BorrowedBooks = require('../models/borrowedBooksModel');
 
 router.get("/", async (req, res) => {
     try {
