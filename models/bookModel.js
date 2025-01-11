@@ -24,6 +24,10 @@ const BookSchema = new Schema({
     assignedTo: {
         type: [Schema.Types.ObjectId],
         ref: 'User'
+    },
+    availability: {
+        type: Boolean,
+        default: true
     }
 })
 

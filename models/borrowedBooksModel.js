@@ -26,10 +26,6 @@ const BorrowedBooksSchema = new Schema({
     },
     returnedDate: {
         type: Date
-    },
-    availability: {
-        type: Boolean,
-        default: true
     }
 });
 

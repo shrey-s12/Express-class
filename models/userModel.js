@@ -11,6 +11,10 @@ const UserSchema = new Schema({
         required: true,
         unique: true,
     },
+    password: {
+        type: String,
+        required: true,
+    },
     borrowedBooks: {
         type: [Schema.Types.ObjectId],
         ref: 'Book',
